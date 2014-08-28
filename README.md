@@ -1,4 +1,4 @@
-Leads-application
+Leads-demo-application
 =================
 
 Simple applications relying on the LEADS infrastructure
