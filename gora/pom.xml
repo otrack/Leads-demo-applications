@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>eu.leads</groupId>
+  <artifactId>application</artifactId>
+  <version>1.0</version>
+
+  <organization>
+    <name>The LEADS project</name>
+    <url>http://www.leads-project.eu/</url>
+  </organization>
+
+  <properties>
+    <gora.version>0.5-SNAPSHOT</gora.version>
+    <avro.version>1.7.6</avro.version>
+    <nutch.version>2.2</nutch.version>      
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.apache.gora</groupId>
+      <artifactId>gora-core</artifactId>
+      <version>${gora.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.gora</groupId>
+      <artifactId>gora-infinispan</artifactId>
+      <version>${gora.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <version>${avro.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.nutch</groupId>
+      <artifactId>nutch</artifactId>
+      <version>${nutch.version}</version>
+    </dependency>
+    
+  </dependencies>    
+
+</project>

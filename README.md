@@ -1,2 +1,4 @@
-A simple distributed sum computation on top of Infinispan.
+Leads-application
+=================
 
+Simple applications relying on the LEADS infrastructure
