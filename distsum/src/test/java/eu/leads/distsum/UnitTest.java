@@ -1,8 +1,10 @@
 package eu.leads.distsum;
 
+import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.test.MultipleSitesAbstractTest;
 import org.infinispan.server.hotrod.HotRodServer;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -110,8 +112,14 @@ public class UnitTest extends MultipleSitesAbstractTest{
          }
          System.out.println("Real sum: " + realsum + " Global Sum: " + coord.getGlobalSum());
          System.out.println("********* END OF ROUND " + round + " ********\n\n");
-         assert (0.9 * realsum <= coord.getGlobalSum());
-         assert (1.1 * realsum >= coord.getGlobalSum());
+         assert (0.5 * realsum <= coord.getGlobalSum());
+         assert (1.5 * realsum >= coord.getGlobalSum());
+      }
+
+      try {
+         Thread.sleep(1000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();  // TODO: Customise this generated block
       }
 
    }
@@ -123,7 +131,7 @@ public class UnitTest extends MultipleSitesAbstractTest{
 
    @Override 
    protected int numberOfNodes() {
-      return 1;
+      return 3;
    }
 
    @Override
@@ -131,10 +139,24 @@ public class UnitTest extends MultipleSitesAbstractTest{
       super.createCacheManagers();
       manager = new EnsembleCacheManager(sites());
       for (HotRodServer server : servers) {
-         server.addCacheEventFilterFactory("comchannel-factory", new ComChannel.ComChannelFilterFactory());
-         server.addCacheEventConverterFactory("comchannel-factory", new ComChannel.ComChannelConverter());
+         server.addCacheEventFilterFactory("comchannel-factory", new ComChannelFilterFactory());
+         server.addCacheEventConverterFactory("comchannel-factory", new ComChannelConverterFactory());
       }
    }
+
+   @AfterClass(alwaysRun = true)
+   @Override
+   public void destroy(){
+      try {
+         manager.getCache().stop();
+         for (HotRodServer server : servers)
+            HotRodClientTestingUtil.killServers(server);
+         super.destroy();
+      } catch (Exception e) {
+         // ignore.
+      }
+   }
+
 
 }
 

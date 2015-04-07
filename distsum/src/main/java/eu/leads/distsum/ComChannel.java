@@ -1,10 +1,6 @@
 package eu.leads.distsum;
 
 import org.infinispan.ensemble.cache.EnsembleCache;
-import org.infinispan.metadata.Metadata;
-import org.infinispan.notifications.cachelistener.filter.*;
-
-import java.io.Serializable;
 
 /**
  *
@@ -41,33 +37,6 @@ public class ComChannel {
          if(!node.equals(Node.COORDINATOR)){
             nodes.put(node,message);
          }
-      }
-   }
-
-   public static class ComChannelFilterFactory implements CacheEventFilterFactory, Serializable{
-      @Override
-      public <K, V> CacheEventFilter<K, V> getFilter(final Object[] params) {
-         return new CacheEventFilter<K, V>() {
-            @Override
-            public boolean accept(K key, V oldValue, Metadata oldMetadata, V newValue, Metadata newMetadata,
-                  EventType eventType) {
-               return params[0].equals(key);
-            }
-         };
-
-      }
-   }
-
-   public static class ComChannelConverter implements CacheEventConverterFactory, Serializable{
-      @Override
-      public CacheEventConverter getConverter(Object[] params) {
-         return new CacheEventConverter() {
-            @Override 
-            public Object convert(Object key, Object oldValue, Metadata oldMetadata, Object newValue, Metadata newMetadata,
-                  EventType eventType) {
-               return newValue;
-            }
-         };
       }
    }
 

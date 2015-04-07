@@ -1,6 +1,7 @@
 package eu.leads.distsum;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  *
@@ -14,6 +15,7 @@ public class Message implements Serializable {
    String from;   //Who sends the message
    String type;   //Type of Message
    Serializable body;   //The body of message
+   UUID id;
 
    public static final  Message EMPTYMSG = new Message("","");
 
@@ -23,6 +25,7 @@ public class Message implements Serializable {
    public Message(String from,String type){
       this.from = from;
       this.type = type;
+      this.id = UUID.randomUUID();
    }
 
    /**
@@ -84,6 +87,11 @@ public class Message implements Serializable {
     */
    public void setBody(Serializable body) {
       this.body = body;
+   }
+   
+   @Override
+   public boolean equals(Object m) {
+      return m instanceof Message && ((Message) m).id.equals(this.id);
    }
 
 }
