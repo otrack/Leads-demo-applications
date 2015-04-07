@@ -19,22 +19,24 @@ public class SimpleApplication {
 
     Configuration configuration = NutchConfiguration.create();
     try {
-      DataStore<String,WebPage> store = StorageUtils.createWebStore(configuration,String.class,WebPage.class);
+      DataStore<String,WebPage> store = StorageUtils.createStore(
+            configuration,String.class,WebPage.class);
       store.createSchema();
       Query query = store.newQuery();
-      query.setLimit(10);
-      query.setOffset(100);
-      query.setFields("outlinks");
+      query.setLimit(100);
+      query.setOffset(0);
+      query.setFields("inlinks");
       Result<String,WebPage> result = query.execute();
-      int averageOutlinks = 0;
+      int averageInlinks = 0;
       int count = 0;
       while(result.next()){
         WebPage page = result.get();
         System.out.println("(reversed) url is: "+ result.getKey());
-        averageOutlinks += page.getOutlinks().size();
+        averageInlinks += page.getInlinks().size();
         count++;
       }
-      System.out.println("Average out degree: "+(float)averageOutlinks/(float)count);
+      System.out.println("Total amount of pages: "+count);
+      System.out.println("Average in degree: "+(float)averageInlinks/(float)count);
 
     } catch (Exception e) {
       e.printStackTrace();

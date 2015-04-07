@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>eu.leads</groupId>
-  <artifactId>gora</artifactId>
+  <artifactId>leads-application-demo-gora</artifactId>
   <version>1.0</version>
   <name>Leads-application-demo Gora </name>
 
@@ -28,6 +28,11 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>eu.leads.application.SimpleApplication</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
