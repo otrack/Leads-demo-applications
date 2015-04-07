@@ -1,5 +1,9 @@
 package eu.leads.distsum;
 
+import org.infinispan.client.hotrod.annotation.ClientCacheEntryModified;
+import org.infinispan.client.hotrod.annotation.ClientListener;
+import org.infinispan.client.hotrod.event.ClientCacheEntryCustomEvent;
+
 /**
  *
  * @author vagvaz
@@ -8,11 +12,7 @@ package eu.leads.distsum;
  * Created by vagvaz on 7/5/14.
  */
 
-import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
-import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
-
-@Listener(clustered = true, sync = false)
+@ClientListener(filterFactoryName = "comchannel-factory", converterFactoryName = "comchannel-factory")
 public abstract class Node {
 
     public static final String COORDINATOR = "COORDINATOR";
@@ -27,11 +27,9 @@ public abstract class Node {
 
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    @CacheEntryModified
-    public void onCacheModification(CacheEntryEvent event){
-        if (event.getKey().equals(id))
-            this.receiveMessage((Message) event.getValue());
+    @ClientCacheEntryModified
+    public void onCacheModification(ClientCacheEntryCustomEvent event){
+       this.receiveMessage((Message) event.getEventData());
     }
-
 
 }

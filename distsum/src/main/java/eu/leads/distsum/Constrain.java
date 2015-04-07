@@ -1,5 +1,7 @@
 package eu.leads.distsum;
 
+import java.io.Serializable;
+
 /**
  * @author vagvaz
  * @author otrack
@@ -7,7 +9,7 @@ package eu.leads.distsum;
  * Created by vagvaz on 7/5/14.
  * A simple constrain class with upper and lower bound
  */
-public class Constrain {
+public class Constrain implements Serializable{
   private int lowBound;
   private int upperBound;
   public Constrain(int low, int high) {

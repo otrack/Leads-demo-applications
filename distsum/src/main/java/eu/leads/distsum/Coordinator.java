@@ -127,7 +127,10 @@ public class Coordinator extends Node{
     private void sendConstrains() {
         //Send to each worker node the new constrain
         for ( Map.Entry<String, Constrain> entry : constrains.entrySet() ) {
-            channel.sentTo(entry.getKey(), new Message(Node.COORDINATOR, "constrain", entry.getValue()));
+            channel.sentTo(
+                  entry.getKey(), 
+                  new Message(Node.COORDINATOR, "constrain",
+                  (java.io.Serializable) entry.getValue()));
         }
     }
 

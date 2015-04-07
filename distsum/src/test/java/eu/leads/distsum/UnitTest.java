@@ -1,10 +1,8 @@
 package eu.leads.distsum;
 
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.SingleCacheManagerTest;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
+import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.test.MultipleSitesAbstractTest;
+import org.infinispan.server.hotrod.HotRodServer;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -53,72 +51,90 @@ import java.util.Random;
  *
  */
 @Test
-public class UnitTest extends SingleCacheManagerTest{
+public class UnitTest extends MultipleSitesAbstractTest{
 
-    public void run() {
+   private static EnsembleCacheManager manager;
+   
+   public void run() {
 
-        //The communication channel between coordinator and the workers
-        ComChannel channel = new ComChannel(cacheManager.<String, Message>getCache());
+      //The communication channel between coordinator and the workers
+      ComChannel channel = new ComChannel(manager.<String, Message>getCache());
 
-        Coordinator coord = new Coordinator(channel);
+      Coordinator coord = new Coordinator(channel);
 
-        //Create initial values and constrains for the workers
-        int numOfWorkers = 10;
-        ArrayList<Worker> workers = new ArrayList<Worker>(numOfWorkers);
-        Map<String,Integer> workerValues = new HashMap<String, Integer>(numOfWorkers);
-        Map<String,Constrain> workerConstrains = new HashMap<String, Constrain>(numOfWorkers);
+      //Create initial values and constrains for the workers
+      int numOfWorkers = 10;
+      ArrayList<Worker> workers = new ArrayList<Worker>(numOfWorkers);
+      Map<String, Integer> workerValues = new HashMap<String, Integer>(numOfWorkers);
+      Map<String, Constrain> workerConstrains = new HashMap<String, Constrain>(numOfWorkers);
 
-        int initValue = 10;
-        Constrain initConstrain = new Constrain(9,11);
-        for ( int worker = 0; worker < numOfWorkers; worker++ ) {
-            //Create new worker with initial values
-            Worker w = new Worker(Integer.toString(worker),initValue,initConstrain,channel);
-            workers.add(w);
-            //put worker initial globalSum into the map
-            workerValues.put(w.getId(), w.getLocalValue());
-            //put worker's constrain into the map
-            workerConstrains.put(w.getId(),w.getConstrain());
-            //register worker to the channel
-            channel.register(w.getId(),w);
-        }
+      int initValue = 10;
+      Constrain initConstrain = new Constrain(9, 11);
+      for (int worker = 0; worker < numOfWorkers; worker++) {
+         //Create new worker with initial values
+         Worker w = new Worker(Integer.toString(worker), initValue, initConstrain, channel);
+         workers.add(w);
+         //put worker initial globalSum into the map
+         workerValues.put(w.getId(), w.getLocalValue());
+         //put worker's constrain into the map
+         workerConstrains.put(w.getId(), w.getConstrain());
+         //register worker to the channel
+         channel.register(w.getId(), w);
+      }
 
-        //Initialize structures kept by coordinator
-        coord.setLocalValues(workerValues);
-        coord.setConstrains(workerConstrains);
+      //Initialize structures kept by coordinator
+      coord.setLocalValues(workerValues);
+      coord.setConstrains(workerConstrains);
 
-        int[] updates = {1,1,1,1,2,2,-1,-1,-2};
-        int numberOfRounds = 4;
-        Random rand = new Random();
-        for ( int round = 0; round < numberOfRounds; round++ ) {
-            System.out.println("********* ROUND " + round +" ********");
-            int realsum = 0;
-            for ( int worker = 0; worker < numOfWorkers; worker++ ) {
-                int update = updates[rand.nextInt(updates.length)];
-                int oldValue = workers.get(worker).getLocalValue();
-                workers.get(worker).update(update);
+      int[] updates = { 1, 1, 1, 1, 2, 2, -1, -1, -2 };
+      int numberOfRounds = 4;
+      Random rand = new Random();
+      for (int round = 0; round < numberOfRounds; round++) {
+         System.out.println("********* ROUND " + round + " ********");
+         int realsum = 0;
+         for (int worker = 0; worker < numOfWorkers; worker++) {
+            int update = updates[rand.nextInt(updates.length)];
+            int oldValue = workers.get(worker).getLocalValue();
+            workers.get(worker).update(update);
 
-                System.out.println("worker " + worker + ": update=" +update+" oldval="+oldValue + " new newValue= " + workers.get(worker).getLocalValue());
-                realsum += workers.get(worker).getLocalValue();
-            }
+            System.out.println(
+                  "worker " + worker + ": update=" + update + " oldval=" + oldValue + " new newValue= " + workers
+                        .get(worker).getLocalValue());
+            realsum += workers.get(worker).getLocalValue();
+         }
 
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();  // TODO: Customise this generated block
-            }
-            System.out.println("Real sum: " + realsum + " Global Sum: " +coord.getGlobalSum());
-            System.out.println("********* END OF ROUND " + round +" ********\n\n");
-            assert(0.9*realsum <= coord.getGlobalSum());
-            assert(1.1*realsum >= coord.getGlobalSum());
-        }
+         try {
+            Thread.sleep(1000);
+         } catch (InterruptedException e) {
+            e.printStackTrace();  // TODO: Customise this generated block
+         }
+         System.out.println("Real sum: " + realsum + " Global Sum: " + coord.getGlobalSum());
+         System.out.println("********* END OF ROUND " + round + " ********\n\n");
+         assert (0.9 * realsum <= coord.getGlobalSum());
+         assert (1.1 * realsum >= coord.getGlobalSum());
+      }
 
+   }
 
-    }
+   @Override
+   protected int numberOfSites() {
+      return 1;
+   }
 
-    @Override
-    protected EmbeddedCacheManager createCacheManager() throws Exception {
-        GlobalConfigurationBuilder global = new GlobalConfigurationBuilder();
-        ConfigurationBuilder config = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-        return TestCacheManagerFactory.createCacheManager(global, config);
-    }
+   @Override 
+   protected int numberOfNodes() {
+      return 1;
+   }
+
+   @Override
+   protected void createCacheManagers() throws Throwable {
+      super.createCacheManagers();
+      manager = new EnsembleCacheManager(sites());
+      for (HotRodServer server : servers) {
+         server.addCacheEventFilterFactory("comchannel-factory", new ComChannel.ComChannelFilterFactory());
+         server.addCacheEventConverterFactory("comchannel-factory", new ComChannel.ComChannelConverter());
+      }
+   }
+
 }
+
