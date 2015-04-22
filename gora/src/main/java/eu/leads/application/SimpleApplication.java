@@ -28,7 +28,7 @@ public class SimpleApplication {
 
          store.createSchema();
          Query query = store.newQuery();
-         query.setFields("inlinks");
+         query.setFields("content","inlinks");
 
          MapFieldValueFilter<String, WebPage> filter = new MapFieldValueFilter<>();
          filter.setFieldName(WebPage.Field.MARKERS.toString());
@@ -44,7 +44,8 @@ public class SimpleApplication {
          int count = 0;
          while(result.next()){
             WebPage page = result.get();
-            System.out.println("(reversed) url is: "+ result.getKey());
+            if (page.getContent() != null && page.getContent().array()!=null)
+               System.out.println("(reversed) url is: "+ result.getKey()+", content size: "+page.getContent().array().length);
             averageInlinks += page.getInlinks().size();
             count++;
          }
