@@ -71,6 +71,13 @@
             <type>test-jar</type>
         </dependency>
 
+        <dependency>
+            <groupId>com.googlecode.java-diff-utils</groupId>
+            <artifactId>diffutils</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+
     </dependencies>
 
 </project>
