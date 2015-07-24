@@ -37,7 +37,7 @@ public class SimpleApplication {
                configuration,String.class,WebPage.class);
          store.createSchema();
 
-         // Retrieve the top 100 first pages from http://www.roadrunnersports.com/ (whatever the version is)
+          Retrieve the top 100 first pages from http://www.roadrunnersports.com/ (whatever the version is)
          // We use the API of Apache Gora and its support in ISPN.
          Query query = store.newQuery();
          query.setLimit(100);

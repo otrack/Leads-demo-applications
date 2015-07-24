@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.infinispan:infinispan-ensemble:test-jar:tests:7.0.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/infinispan/infinispan-ensemble/7.0.1-SNAPSHOT/infinispan-ensemble-7.0.1-SNAPSHOT-tests.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/infinispan/infinispan-ensemble/7.0.1-SNAPSHOT/infinispan-ensemble-7.0.1-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/infinispan/infinispan-ensemble/7.0.1-SNAPSHOT/infinispan-ensemble-7.0.1-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

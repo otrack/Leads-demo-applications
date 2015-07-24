@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$USER_HOME$/ALL/myWork/Implementation/Leads-demo-applications/Leads-demo-applications.iml" filepath="$USER_HOME$/ALL/myWork/Implementation/Leads-demo-applications/Leads-demo-applications.iml" />
+      <module fileurl="file://$PROJECT_DIR$/distsum/distsum.iml" filepath="$PROJECT_DIR$/distsum/distsum.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gora/gora.iml" filepath="$PROJECT_DIR$/gora/gora.iml" />
+    </modules>
+  </component>
+</project>
+
