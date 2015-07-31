@@ -2,7 +2,7 @@ package eu.leads.distsum;
 
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.ensemble.EnsembleCacheManager;
-import org.infinispan.ensemble.test.MultipleSitesAbstractTest;
+import org.infinispan.ensemble.test.SimulationDriver;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -15,7 +15,7 @@ import java.util.Random;
 /**
  *
  * @author  vagvaz
- * @author otrack
+ * @author Pierre Sutra
  *
  * Created by vagvaz on 7/5/14.
  *
@@ -53,7 +53,7 @@ import java.util.Random;
  *
  */
 @Test
-public class UnitTest extends MultipleSitesAbstractTest{
+public class UnitTest extends SimulationDriver{
 
    private static EnsembleCacheManager manager;
    
@@ -125,20 +125,10 @@ public class UnitTest extends MultipleSitesAbstractTest{
    }
 
    @Override
-   protected int numberOfSites() {
-      return 1;
-   }
-
-   @Override 
-   protected int numberOfNodes() {
-      return 3;
-   }
-
-   @Override
-   protected void createCacheManagers() throws Throwable {
+   public void createCacheManagers() throws Throwable {
       super.createCacheManagers();
       manager = new EnsembleCacheManager(sites());
-      for (HotRodServer server : servers) {
+      for (HotRodServer server : servers()) {
          server.addCacheEventFilterFactory("comchannel-factory", new ComChannelFilterFactory());
          server.addCacheEventConverterFactory("comchannel-factory", new ComChannelConverterFactory());
       }
@@ -149,7 +139,7 @@ public class UnitTest extends MultipleSitesAbstractTest{
    public void destroy(){
       try {
          manager.getCache().stop();
-         for (HotRodServer server : servers)
+         for (HotRodServer server : servers())
             HotRodClientTestingUtil.killServers(server);
          super.destroy();
       } catch (Exception e) {
