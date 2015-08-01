@@ -6,6 +6,7 @@ import difflib.Patch;
 import org.apache.gora.filter.FilterOp;
 import org.apache.gora.filter.SingleFieldValueFilter;
 import org.apache.gora.infinispan.query.InfinispanQuery;
+import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStore;
@@ -123,14 +124,17 @@ public class SimpleApplication {
          // 4 - Retrieve 100000 URLs stored in the data store using pagination
          //     with blocks of size 10000
          int limit = 100000;
-         int blocksize = 1000;
+         int blocksize = 10000;
          for (int i = 0; i<limit; i+=blocksize) {
             query = store.newQuery();
             query.setFields("key");
             query.setOffset(i);
             query.setLimit(i + blocksize);
-            query.execute();
-            System.out.println(((InfinispanQuery) query).getResultSize());
+            List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
+            for (PartitionQuery q : partitionQueries) {
+               q.execute();
+               System.out.println(((InfinispanQuery) q).getResultSize());
+            }
          }
 
       } catch (Exception e) {
