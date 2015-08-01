@@ -134,7 +134,7 @@ public class SimpleApplication {
          int limit = total/partitionQueries.size();
 
          ExecutorService pool = Executors.newCachedThreadPool();
-         List<Future<String>> futures = new ArrayList<>();
+         List<Future<Void>> futures = new ArrayList<>();
          for (int i = 0; i<limit; i+=blocksize) {
             query = store.newQuery();
             query.setFields("key");
@@ -142,22 +142,27 @@ public class SimpleApplication {
             if (i+blocksize < limit)
                query.setLimit(i + blocksize);
             partitionQueries = ((InfinispanQuery) query).split();
-            for (PartitionQuery q : partitionQueries) {
+            for (final PartitionQuery q : partitionQueries) {
                futures.add(
                      pool.submit(
-                           new Callable<String>() {
+                           new Callable<Void>() {
                               @Override
-                              public String call() throws Exception {
-                                 Result<String,WebPage> result = q.execute();
+                              public Void call() throws Exception {
+                                 Result<String, WebPage> result = q.execute();
                                  while (result.next()) {
                                     String key = result.getKey();
-                                    return key;
-                                 }}}));
+                                    System.out.println(key);
+                                 }
+                                 return null;
+                              }
+                           }
+                     )
+               );
             }
          }
 
-         for(Future<String> future : futures)
-            System.out.println(future.get());
+         for(Future<Void> future : futures)
+            future.get();
 
       } catch (Exception e) {
          e.printStackTrace();
