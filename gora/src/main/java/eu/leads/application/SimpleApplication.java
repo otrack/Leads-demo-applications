@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -121,21 +125,39 @@ public class SimpleApplication {
             previousPage = currentPage;
          }
 
-         // 4 - Retrieve 100000 URLs stored in the data store using pagination
-         //     with blocks of size 10000
-         int limit = 100000;
+         // 4 - Retrieve all data in the remote store using pagination and per location/server splitting
+         query = store.newQuery();
+         query.setFields("key");
+         query.setLimit(1);
+         List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
          int blocksize = 10000;
+         int limit = total/partitionQueries.size();
+
+         ExecutorService pool = Executors.newCachedThreadPool();
+         List<Future<String>> futures = new ArrayList<>();
          for (int i = 0; i<limit; i+=blocksize) {
             query = store.newQuery();
             query.setFields("key");
             query.setOffset(i);
-            query.setLimit(i + blocksize);
-            List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
+            if (i+blocksize < limit)
+               query.setLimit(i + blocksize);
+            partitionQueries = ((InfinispanQuery) query).split();
             for (PartitionQuery q : partitionQueries) {
-               q.execute();
-               System.out.println(((InfinispanQuery) q).getResultSize());
+               futures.add(
+                     pool.submit(
+                           new Callable<String>() {
+                              @Override
+                              public String call() throws Exception {
+                                 Result<String,WebPage> result = q.execute();
+                                 while (result.next()) {
+                                    String key = result.getKey();
+                                    return key;
+                                 }}}));
             }
          }
+
+         for(Future<String> future : futures)
+            System.out.println(future.get());
 
       } catch (Exception e) {
          e.printStackTrace();
@@ -144,5 +166,4 @@ public class SimpleApplication {
       System.exit(0);
 
    }
-
 }
