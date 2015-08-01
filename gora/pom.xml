@@ -64,12 +64,12 @@
             <version>${nutch.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.nutch</groupId>
-            <artifactId>nutch</artifactId>
-            <version>${nutch.version}</version>
-            <type>test-jar</type>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.nutch</groupId>-->
+            <!--<artifactId>nutch</artifactId>-->
+            <!--<version>${nutch.version}</version>-->
+            <!--<type>test-jar</type>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>com.googlecode.java-diff-utils</groupId>
