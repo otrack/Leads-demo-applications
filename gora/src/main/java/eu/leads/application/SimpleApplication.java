@@ -21,10 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  *
@@ -133,8 +129,6 @@ public class SimpleApplication {
          int blocksize = 10000;
          int limit = total/partitionQueries.size();
 
-         ExecutorService pool = Executors.newCachedThreadPool();
-         List<Future<Void>> futures = new ArrayList<>();
          for (int i = 0; i<limit; i+=blocksize) {
             query = store.newQuery();
             query.setFields("key");
@@ -143,26 +137,13 @@ public class SimpleApplication {
                query.setLimit(i + blocksize);
             partitionQueries = ((InfinispanQuery) query).split();
             for (final PartitionQuery q : partitionQueries) {
-               futures.add(
-                     pool.submit(
-                           new Callable<Void>() {
-                              @Override
-                              public Void call() throws Exception {
-                                 Result<String, WebPage> result = q.execute();
-                                 while (result.next()) {
-                                    String key = result.getKey();
-                                    System.out.println(key);
-                                 }
-                                 return null;
-                              }
-                           }
-                     )
-               );
+               result = q.execute();
+               while (result.next()) {
+                  String key = result.getKey();
+                  System.out.println(key);
+               }
             }
          }
-
-         for(Future<Void> future : futures)
-            future.get();
 
       } catch (Exception e) {
          e.printStackTrace();
