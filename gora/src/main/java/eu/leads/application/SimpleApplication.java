@@ -119,6 +119,20 @@ public class SimpleApplication {
             previousText = currentText;
             previousPage = currentPage;
          }
+
+         // 4 - Retrieve 100000 URLs stored in the data store using pagination
+         //     with blocks of size 10000
+         int limit = 100000;
+         int blocksize = 10000;
+         for (int i = 0; i<limit; i+=blocksize) {
+            query = store.newQuery();
+            query.setFields("key");
+            query.setOffset(i);
+            query.setLimit(i + blocksize);
+            query.execute();
+            System.out.println(((InfinispanQuery) query).getResultSize());
+         }
+
       } catch (Exception e) {
          e.printStackTrace();
       }
