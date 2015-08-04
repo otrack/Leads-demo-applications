@@ -131,7 +131,7 @@ public class SimpleApplication {
 
          for (int i = 0; i<limit; i+=blocksize) {
             query = store.newQuery();
-            query.setFields("key");
+            query.setFields("key","content");
             query.setOffset(i);
             if (i+blocksize < limit)
                query.setLimit(i + blocksize);
@@ -140,7 +140,7 @@ public class SimpleApplication {
                result = q.execute();
                while (result.next()) {
                   String key = result.getKey();
-                  System.out.println(key);
+                  System.out.println("<"+key+", "+result.get().getContent().array().length+">");
                }
             }
          }
