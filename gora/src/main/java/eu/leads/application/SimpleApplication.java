@@ -17,6 +17,7 @@ import org.apache.nutch.util.NutchConfiguration;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -140,9 +141,9 @@ public class SimpleApplication {
                result = q.execute();
                while (result.next()) {
                   String key = result.getKey();
-                  byte[] content = result.get().getContent().array();
+                  ByteBuffer content = result.get().getContent();
                   System.out.println("<"+key+", "+
-                        (content==null ? "0" : content.length+">"));
+                        (content==null ? "0" : content.array().length+">"));
                }
             }
          }
