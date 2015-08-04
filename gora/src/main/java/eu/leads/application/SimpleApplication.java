@@ -142,7 +142,7 @@ public class SimpleApplication {
                   String key = result.getKey();
                   byte[] content = result.get().getContent().array();
                   System.out.println("<"+key+", "+
-                        content==null ? "0" + content.length+">");
+                        (content==null ? "0" : content.length+">"));
                }
             }
          }
