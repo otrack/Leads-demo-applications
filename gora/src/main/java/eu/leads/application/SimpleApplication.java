@@ -140,7 +140,9 @@ public class SimpleApplication {
                result = q.execute();
                while (result.next()) {
                   String key = result.getKey();
-                  System.out.println("<"+key+", "+result.get().getContent().array().length+">");
+                  byte[] content = result.get().getContent().array();
+                  System.out.println("<"+key+", "+
+                        content==null ? "0" + content.length+">");
                }
             }
          }
