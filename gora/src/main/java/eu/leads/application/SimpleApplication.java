@@ -120,7 +120,7 @@ public class SimpleApplication {
          query.setFields("key");
          query.setLimit(1);
          List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
-         int blocksize = 10000;
+         int blocksize = 1000;
          int limit = total/partitionQueries.size();
 
          for (int i = 0; i<limit; i+=blocksize) {
@@ -128,7 +128,7 @@ public class SimpleApplication {
             query.setFields("key","content");
             query.setOffset(i);
             if (i+blocksize < limit)
-               query.setLimit(i + blocksize);
+               query.setLimit(blocksize);
             partitionQueries = ((InfinispanQuery) query).split();
             for (final PartitionQuery q : partitionQueries) {
                result = q.execute();
