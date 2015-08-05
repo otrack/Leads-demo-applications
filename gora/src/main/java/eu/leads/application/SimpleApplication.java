@@ -1,10 +1,5 @@
 package eu.leads.application;
 
-import difflib.Delta;
-import difflib.DiffUtils;
-import difflib.Patch;
-import org.apache.gora.filter.FilterOp;
-import org.apache.gora.filter.SingleFieldValueFilter;
 import org.apache.gora.infinispan.query.InfinispanQuery;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
@@ -15,13 +10,8 @@ import org.apache.nutch.storage.StorageUtils;
 import org.apache.nutch.storage.WebPage;
 import org.apache.nutch.util.NutchConfiguration;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -35,6 +25,9 @@ public class SimpleApplication {
       Configuration configuration = NutchConfiguration.create();
       try {
 
+         Result<String,WebPage> result;
+         Query query;
+
          // 0 - Configuration
          DataStore<String,WebPage> store = StorageUtils.createStore(
                configuration, String.class, WebPage.class);
@@ -42,7 +35,7 @@ public class SimpleApplication {
 
          // 1 - Print the total number of pages available in the store
          // We use the API of Apache Gora and its support in ISPN.
-         Query query = store.newQuery();
+         query = store.newQuery();
          query.setFields("key");
          query.setLimit(1);
          query.execute();
@@ -60,7 +53,7 @@ public class SimpleApplication {
 //         fieldValueFilter.setFilterOp(FilterOp.LIKE);
 //         fieldValueFilter.setOperands(new String[] { "%roadrunnersports%" });
 //         query.setFilter(fieldValueFilter);
-//         Result<String,WebPage> result = query.execute();
+//         result = query.execute();
 //         int averageInlinks = 0;
 //         int count = 0;
 //         Map<String,WebPage> resultMap = new HashMap<>();
