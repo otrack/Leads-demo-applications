@@ -10,8 +10,11 @@ import org.apache.nutch.storage.StorageUtils;
 import org.apache.nutch.storage.WebPage;
 import org.apache.nutch.util.NutchConfiguration;
 
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 /**
  *
@@ -29,7 +32,7 @@ public class SimpleApplication {
          Query query;
 
          // 0 - Configuration
-         DataStore<String,WebPage> store = StorageUtils.createStore(
+         final DataStore<String,WebPage> store = StorageUtils.createStore(
                configuration, String.class, WebPage.class);
          store.createSchema();
 
@@ -40,7 +43,7 @@ public class SimpleApplication {
          query.setLimit(1);
          query.execute();
          int total = ((InfinispanQuery)query).getResultSize();
-         System.out.println("Total amount of pages (in the store): "+total);
+         System.out.println("Total amount of (expected) web pages: "+total);
 
          // 2 - Retrieve the top 100 first pages from http://www.roadrunnersports.com/ (whatever the version is)
 //         query = store.newQuery();
@@ -120,26 +123,43 @@ public class SimpleApplication {
          query.setFields("key");
          query.setLimit(1);
          List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
-         int blocksize = 1000;
-         int limit = total/partitionQueries.size();
+         final int blocksize = 1000;
+         final int limit = total/partitionQueries.size();
 
-         for (int i = 0; i<limit; i+=blocksize) {
-            query = store.newQuery();
-            query.setFields("key","content");
-            query.setOffset(i);
-            if (i+blocksize < limit)
-               query.setLimit(blocksize);
-            partitionQueries = ((InfinispanQuery) query).split();
-            for (final PartitionQuery q : partitionQueries) {
-               result = q.execute();
-               while (result.next()) {
-                  String key = result.getKey();
-                  ByteBuffer content = result.get().getContent();
-                  System.out.println("<"+key+", "+
-                        (content==null ? "0" : content.array().length+">"));
-               }
-            }
+         System.out.print("Loading keys ");
+         final Queue<String> keys = new ConcurrentLinkedQueue<>();
+         ExecutorService service = Executors.newCachedThreadPool();
+         Collection<Future> futures = new ArrayList<>();
+         partitionQueries = ((InfinispanQuery) query).split();
+         for (final PartitionQuery q : partitionQueries) {
+            futures.add(
+                  service.submit(
+                        new Callable<Void>() {
+                           @Override
+                           public Void call() throws Exception {
+                              for (int i = 0; i<limit; i+=blocksize) {
+                                 Query partialQuery = store.newQuery();
+                                 partialQuery.setFields("key");
+                                 partialQuery.setOffset(i);
+                                 if (i + blocksize < limit)
+                                    partialQuery.setLimit(blocksize);
+                                 Result<String, WebPage> partialResult = q.execute();
+                                 while (partialResult.next()) {
+                                    keys.add(partialResult.getKey());
+                                 }
+                                 System.out.print(".");
+                              }
+                              return null;
+                           }
+                        }
+                  )
+            );
          }
+
+         for (Future future : futures)
+            future.get();
+
+         System.out.println(" done "+keys.size());
 
       } catch (Exception e) {
          e.printStackTrace();
@@ -148,4 +168,5 @@ public class SimpleApplication {
       System.exit(0);
 
    }
+
 }
