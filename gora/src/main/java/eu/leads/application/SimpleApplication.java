@@ -10,10 +10,8 @@ import org.apache.nutch.storage.StorageUtils;
 import org.apache.nutch.storage.WebPage;
 import org.apache.nutch.util.NutchConfiguration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
+import java.net.InetSocketAddress;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -119,49 +117,46 @@ public class SimpleApplication {
 //         }
 
          // 4 - Retrieve all data in the remote store using pagination and per location/server splitting
+         System.out.print("Loading keys ");
+         Queue<String> keys = new ConcurrentLinkedQueue<>();
+         Map<InetSocketAddress,List<Query>> queries = new HashMap<>();
+         ExecutorService service = Executors.newCachedThreadPool();
+         Collection<Future> futures = new ArrayList<>();
+
          query = store.newQuery();
          query.setFields("key");
          query.setLimit(1);
-         List<PartitionQuery> partitionQueries = ((InfinispanQuery) query).split();
-         final int blocksize = 1000;
-         final int limit = total/partitionQueries.size();
+         List<PartitionQuery> splits = ((InfinispanQuery) query).split();
+         for (int s = 0; s < splits.size(); s++) {
+            Query locationQuery = splits.get(s);
+            InetSocketAddress location = ((InfinispanQuery) locationQuery).getLocation();
+            queries.put(location, new ArrayList<Query>());
+            locationQuery.execute();
+            int limit = ((InfinispanQuery) locationQuery).getResultSize();
+            int blockSize = 1000;
+            for (int i = 0; i < limit; i += blockSize) {
+               InfinispanQuery partialQuery = (InfinispanQuery) store.newQuery();
+               partialQuery.setFields("key");
+               partialQuery.setOffset(i);
+               if (i + blockSize < limit)
+                  query.setLimit(blockSize);
+               Query q = (Query) partialQuery.split().get(s);
+               queries.get(location).add(q);
+            }
+         }
 
-         System.out.print("Loading keys ");
-         final Queue<String> keys = new ConcurrentLinkedQueue<>();
-         ExecutorService service = Executors.newCachedThreadPool();
-         Collection<Future> futures = new ArrayList<>();
-         partitionQueries = ((InfinispanQuery) query).split();
-         for (final PartitionQuery q : partitionQueries) {
+         for (InetSocketAddress location : queries.keySet()) {
             futures.add(
                   service.submit(
-                        new Callable<Void>() {
-                           @Override
-                           public Void call() throws Exception {
-                              for (int i = 0; i<limit; i+=blocksize) {
-                                 Query partialQuery = store.newQuery();
-                                 partialQuery.setFields("key");
-                                 partialQuery.setOffset(i);
-                                 if (i + blocksize < limit)
-                                    partialQuery.setLimit(blocksize);
-                                 Result<String, WebPage> partialResult = q.execute();
-                                 while (partialResult.next()) {
-                                    keys.add(partialResult.getKey());
-                                 }
-                                 System.out.print(".");
-                              }
-                              return null;
-                           }
-                        }
-                  )
-            );
+                        new KeyLoaderCallable(queries.get(location), keys)));
          }
 
          for (Future future : futures)
             future.get();
 
-         System.out.println(" done "+keys.size());
+         System.out.println(" done " + keys.size());
 
-      } catch (Exception e) {
+      } catch(Exception e) {
          e.printStackTrace();
       }
 
@@ -169,4 +164,29 @@ public class SimpleApplication {
 
    }
 
+   private static class KeyLoaderCallable implements Callable<Void> {
+
+      List<Query> queries;
+      Queue<String> keys;
+
+      public KeyLoaderCallable(List<Query> queries, Queue<String> keys) {
+         this.queries = queries;
+         this.keys = keys;
+      }
+
+      @Override
+      public Void call() throws Exception {
+         for (Query q : queries) {
+            Result<String, WebPage> result = q.execute();
+            while (result.next()) {
+               keys.add(result.getKey());
+            }
+            System.out.print(".");
+         }
+         return null;
+      }
+
+   }
+
 }
+
