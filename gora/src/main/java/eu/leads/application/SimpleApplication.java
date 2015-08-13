@@ -117,7 +117,7 @@ public class SimpleApplication {
 //         }
 
          // 4 - Retrieve all data in the remote store using pagination and per location/server splitting
-         System.out.print("Loading keys ");
+         System.out.println("Loading keys [1/2]");
          Queue<String> keys = new ConcurrentLinkedQueue<>();
          Map<InetSocketAddress,List<Query>> queries = new HashMap<>();
          ExecutorService service = Executors.newCachedThreadPool();
@@ -139,12 +139,13 @@ public class SimpleApplication {
                partialQuery.setFields("key");
                partialQuery.setOffset(i);
                if (i + blockSize < limit)
-                  query.setLimit(blockSize);
+                  partialQuery.setLimit(blockSize);
                Query q = (Query) partialQuery.split().get(s);
                queries.get(location).add(q);
             }
          }
 
+         System.out.print("Loading keys [2/2]");
          for (InetSocketAddress location : queries.keySet()) {
             futures.add(
                   service.submit(
