@@ -8,6 +8,7 @@ import org.apache.gora.store.DataStore;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.storage.StorageUtils;
 import org.apache.nutch.storage.WebPage;
+import org.apache.nutch.util.FilterUtils;
 import org.apache.nutch.util.NutchConfiguration;
 
 import java.net.InetSocketAddress;
@@ -39,6 +40,7 @@ public class SimpleApplication {
          query = store.newQuery();
          query.setFields("key");
          query.setLimit(1);
+         query.setFilter(FilterUtils.getFetchedFilter());
          query.execute();
          int total = ((InfinispanQuery)query).getResultSize();
          System.out.println("Total amount of (expected) web pages: "+total);
@@ -125,6 +127,7 @@ public class SimpleApplication {
 
          query = store.newQuery();
          query.setFields("key");
+         query.setFilter(FilterUtils.getFetchedFilter());
          query.setLimit(1);
          List<PartitionQuery> splits = ((InfinispanQuery) query).split();
          for (int s = 0; s < splits.size(); s++) {
@@ -132,13 +135,14 @@ public class SimpleApplication {
             InetSocketAddress location = ((InfinispanQuery) locationQuery).getLocation();
             queries.put(location, new ArrayList<Query>());
             locationQuery.execute();
-            int limit = 100; // ((InfinispanQuery) locationQuery).getResultSize();
-            int blockSize = 10;
+            int limit = ((InfinispanQuery) locationQuery).getResultSize();
+            int blockSize = 10000;
             for (int i = 0; i < limit; i += blockSize) {
                InfinispanQuery partialQuery = (InfinispanQuery) store.newQuery();
                partialQuery.setFields("key");
                partialQuery.setOffset(i);
                partialQuery.setLimit(blockSize);
+               query.setFilter(FilterUtils.getFetchedFilter());
                Query q = (Query) partialQuery.split().get(s);
                queries.get(location).add(q);
             }
@@ -154,7 +158,7 @@ public class SimpleApplication {
          for (Future future : futures)
             future.get();
 
-         System.out.print("");
+         System.out.println("");
          System.out.println("done " + keys.size());
 
       } catch(Exception e) {
