@@ -132,14 +132,13 @@ public class SimpleApplication {
             InetSocketAddress location = ((InfinispanQuery) locationQuery).getLocation();
             queries.put(location, new ArrayList<Query>());
             locationQuery.execute();
-            int limit = ((InfinispanQuery) locationQuery).getResultSize();
-            int blockSize = 1000;
+            int limit = 100; // ((InfinispanQuery) locationQuery).getResultSize();
+            int blockSize = 10;
             for (int i = 0; i < limit; i += blockSize) {
                InfinispanQuery partialQuery = (InfinispanQuery) store.newQuery();
                partialQuery.setFields("key");
                partialQuery.setOffset(i);
-               if (i + blockSize < limit)
-                  partialQuery.setLimit(blockSize);
+               partialQuery.setLimit(blockSize);
                Query q = (Query) partialQuery.split().get(s);
                queries.get(location).add(q);
             }
@@ -155,7 +154,8 @@ public class SimpleApplication {
          for (Future future : futures)
             future.get();
 
-         System.out.println(" done " + keys.size());
+         System.out.print("");
+         System.out.println("done " + keys.size());
 
       } catch(Exception e) {
          e.printStackTrace();
