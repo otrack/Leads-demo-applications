@@ -136,13 +136,13 @@ public class SimpleApplication {
             queries.put(location, new ArrayList<Query>());
             locationQuery.execute();
             int limit = ((InfinispanQuery) locationQuery).getResultSize();
-            int blockSize = 10000;
+            int blockSize = 1000;
             for (int i = 0; i < limit; i += blockSize) {
                InfinispanQuery partialQuery = (InfinispanQuery) store.newQuery();
                partialQuery.setFields("key");
                partialQuery.setOffset(i);
                partialQuery.setLimit(blockSize);
-               query.setFilter(FilterUtils.getFetchedFilter());
+               partialQuery.setFilter(FilterUtils.getFetchedFilter());
                Query q = (Query) partialQuery.split().get(s);
                queries.get(location).add(q);
             }
