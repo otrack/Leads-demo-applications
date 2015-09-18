@@ -14,6 +14,7 @@ import org.apache.nutch.util.NutchConfiguration;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -21,6 +22,8 @@ import java.util.concurrent.*;
  * @since 1.0
  */
 public class SimpleApplication {
+
+   static Map<String, AtomicInteger> urls = new ConcurrentHashMap<>();
 
    public static void main(String[] args){
 
@@ -35,7 +38,7 @@ public class SimpleApplication {
                configuration, String.class, WebPage.class);
          store.createSchema();
 
-         // 1 - Print the total number of pages available in the store
+         // 1 - Print the total number of content available in the store
          // We use the API of Apache Gora and its support in ISPN.
          query = store.newQuery();
          query.setFields("key");
@@ -43,9 +46,9 @@ public class SimpleApplication {
          query.setFilter(FilterUtils.getFetchedFilter());
          query.execute();
          int total = ((InfinispanQuery)query).getResultSize();
-         System.out.println("Total amount of (expected) web pages: "+total);
+         System.out.println("Total amount of (expected) fetched web pages: "+total);
 
-         // 2 - Retrieve the top 100 first pages from http://www.roadrunnersports.com/ (whatever the version is)
+         // 2 - Retrieve the top 100 first content from http://www.roadrunnersports.com/ (whatever the version is)
 //         query = store.newQuery();
 //         query.setLimit(100);
 //         query.setFields("score", "url", "fetchTime", "content", "inlinks");
@@ -74,7 +77,7 @@ public class SimpleApplication {
 //            if (!resultMap.containsKey(page.getUrl()) || resultMap.get(page.getUrl()).getFetchTime() < page.getFetchTime())
 //               resultMap.put(page.getUrl(),page);
 //         }
-//         System.out.println("Total amount of pages: "+count);
+//         System.out.println("Total amount of content: "+count);
 //         System.out.println("Average in degree: "+(float)averageInlinks/(float)count);
 
          // 3 - Compare the various versions of roadrunnersports.com/rrs/womensshoes/womensnewshoes/
@@ -133,13 +136,14 @@ public class SimpleApplication {
          for (int s = 0; s < splits.size(); s++) {
             Query locationQuery = splits.get(s);
             InetSocketAddress location = ((InfinispanQuery) locationQuery).getLocation();
+            System.out.println("Fetching from "+location);
             queries.put(location, new ArrayList<Query>());
             locationQuery.execute();
             int limit = ((InfinispanQuery) locationQuery).getResultSize();
             int blockSize = 1000;
             for (int i = 0; i < limit; i += blockSize) {
                InfinispanQuery partialQuery = (InfinispanQuery) store.newQuery();
-               partialQuery.setFields("key");
+               partialQuery.setFields("key, url");
                partialQuery.setOffset(i);
                partialQuery.setLimit(blockSize);
                partialQuery.setFilter(FilterUtils.getFetchedFilter());
@@ -159,7 +163,16 @@ public class SimpleApplication {
             future.get();
 
          System.out.println("");
-         System.out.println("done " + keys.size());
+         System.out.println("#pages (w. content): " + keys.size());
+         int oneVersion = 0, fiveVersions = 0;
+         for(CharSequence key : urls.keySet()) {
+            if (urls.get(key).get() > 1)
+               oneVersion++;
+            if (urls.get(key).get() > 5)
+               fiveVersions++;
+         }
+         System.out.println("#pages (>1 versions):" + oneVersion);
+         System.out.println("#pages (>5 versions):" + fiveVersions);
 
       } catch(Exception e) {
          e.printStackTrace();
@@ -185,6 +198,9 @@ public class SimpleApplication {
             Result<String, WebPage> result = q.execute();
             while (result.next()) {
                keys.add(result.getKey());
+               if (!urls.containsKey(result.get().getUrl()))
+                     urls.putIfAbsent(result.get().getUrl(), new AtomicInteger(0));
+               urls.get(result.get().getUrl()).incrementAndGet();
             }
             System.out.print(".");
          }
