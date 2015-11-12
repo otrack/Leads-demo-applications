@@ -16,7 +16,7 @@
     <orderEntry type="module-library">
       <library name="Maven: jdk.tools:jdk.tools:1.6">
         <CLASSES>
-          <root url="jar:///usr/lib/jvm/default-java/lib/tools.jar!/" />
+          <root url="jar:///usr/lib/jvm/java-8-oracle/lib/tools.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -135,7 +135,7 @@
     <orderEntry type="library" name="Maven: org.infinispan:infinispan-remote-query-client:7.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.infinispan.protostream:protostream:2.0.2.Final" level="project" />
     <orderEntry type="library" name="Maven: com.squareup:protoparser:3.1.4" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.avro:avro-maven-plugin:1.7.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.avro:avro-maven-plugin:1.7.6" level="project" />
     <orderEntry type="library" name="Maven: org.apache.maven:maven-plugin-api:2.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.maven:maven-project:2.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.maven:maven-settings:2.0.10" level="project" />
@@ -152,7 +152,7 @@
     <orderEntry type="library" name="Maven: classworlds:classworlds:1.1-alpha-2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.maven.shared:file-management:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.maven.shared:maven-shared-io:1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.avro:avro-compiler:1.7.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.avro:avro-compiler:1.7.6" level="project" />
     <orderEntry type="library" name="Maven: org.infinispan:infinispan-ensemble:7.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.infinispan:infinispan-remote-query-server:7.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.infinispan:infinispan-server-core:7.0.1-SNAPSHOT" level="project" />
@@ -174,11 +174,11 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.6.6" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.6.6" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.avro:avro:1.7.4" level="project" />
-    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-core-asl:1.8.8" level="project" />
-    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-mapper-asl:1.8.8" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.avro:avro:1.7.6" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-core-asl:1.9.13" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-mapper-asl:1.9.13" level="project" />
     <orderEntry type="library" name="Maven: com.thoughtworks.paranamer:paranamer:2.3" level="project" />
-    <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.0.4.1" level="project" />
+    <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.tukaani:xz:1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.nutch:nutch:2.2" level="project" />

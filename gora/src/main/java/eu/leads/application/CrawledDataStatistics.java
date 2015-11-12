@@ -1,5 +1,10 @@
 package eu.leads.application;
 
+import difflib.Delta;
+import difflib.DiffUtils;
+import difflib.Patch;
+import org.apache.gora.filter.FilterOp;
+import org.apache.gora.filter.SingleFieldValueFilter;
 import org.apache.gora.infinispan.query.InfinispanQuery;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
@@ -11,17 +16,17 @@ import org.apache.nutch.storage.WebPage;
 import org.apache.nutch.util.FilterUtils;
 import org.apache.nutch.util.NutchConfiguration;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *
  * @author Pierre Sutra
- * @since 1.0
  */
-public class SimpleApplication {
+public class CrawledDataStatistics {
 
    static Map<String, AtomicInteger> urls = new ConcurrentHashMap<>();
 
@@ -42,86 +47,13 @@ public class SimpleApplication {
          // We use the API of Apache Gora and its support in ISPN.
          query = store.newQuery();
          query.setFields("key");
-         query.setLimit(1);
          query.setFilter(FilterUtils.getFetchedFilter());
+         query.setLimit(1);
          query.execute();
          int total = ((InfinispanQuery)query).getResultSize();
          System.out.println("Total amount of (expected) fetched web pages: "+total);
 
-         // 2 - Retrieve the top 100 first content from http://www.roadrunnersports.com/ (whatever the version is)
-//         query = store.newQuery();
-//         query.setLimit(100);
-//         query.setFields("score", "url", "fetchTime", "content", "inlinks");
-//         query.setSortingOrder(false);
-//         query.setSortingField("score");
-//         SingleFieldValueFilter fieldValueFilter = new SingleFieldValueFilter();
-//         fieldValueFilter.setFieldName("url");
-//         fieldValueFilter.setFilterOp(FilterOp.LIKE);
-//         fieldValueFilter.setOperands(new String[] { "%roadrunnersports%" });
-//         query.setFilter(fieldValueFilter);
-//         result = query.execute();
-//         int averageInlinks = 0;
-//         int count = 0;
-//         Map<String,WebPage> resultMap = new HashMap<>();
-//         while(result.next()){
-//            WebPage page = result.get();
-//            // Print content and some usefull information
-//            System.out.println(
-//                  page.getUrl()
-//                        +", "+page.getScore()
-//                        +", "+page.getFetchTime()
-//                        +", "+(page.getContent()==null ? 0 : page.getContent().array().length));
-//            averageInlinks += page.getInlinks().size();
-//            count++;
-//
-//            if (!resultMap.containsKey(page.getUrl()) || resultMap.get(page.getUrl()).getFetchTime() < page.getFetchTime())
-//               resultMap.put(page.getUrl(),page);
-//         }
-//         System.out.println("Total amount of content: "+count);
-//         System.out.println("Average in degree: "+(float)averageInlinks/(float)count);
-
-         // 3 - Compare the various versions of roadrunnersports.com/rrs/womensshoes/womensnewshoes/
-//         query = store.newQuery();
-//         query.setSortingOrder(false);
-//         query.setSortingField("fetchTime");
-//         query.setLimit(100);
-//         fieldValueFilter = new SingleFieldValueFilter();
-//         fieldValueFilter.setFieldName("url");
-//         fieldValueFilter.setFilterOp(FilterOp.LIKE);
-//         fieldValueFilter.setOperands(new String[] { "%roadrunnersports.com/rrs/womensshoes/womensnewshoes%" });
-//         query.setFilter(fieldValueFilter);
-//         result = query.execute();
-//
-//         List<String> previousText = null;
-//         WebPage previousPage = null;
-//         while(result.next()){
-//            WebPage currentPage = result.get();
-//            System.out.println(currentPage.getUrl()+", "+currentPage.getFetchTime());
-//            List<String> currentText = new ArrayList<>();
-//            if (currentPage.getContent()==null) continue;
-//            BufferedReader reader =
-//                  new BufferedReader(
-//                        new StringReader(
-//                              new String(currentPage.getContent().array())));
-//            String line;
-//            while( (line=reader.readLine()) != null ){currentText.add(line);}
-//            if (previousText!=null) {
-//               System.out.println(
-//                     "****** version"
-//                           + previousPage.getFetchTime()
-//                           + " -- "
-//                           + currentPage.getFetchTime());
-//               Patch patch = DiffUtils.diff(previousText, currentText);
-//               for(Delta delta : patch.getDeltas()) {
-//                  System.out.println("+ "+delta.getOriginal().toString());
-//                  System.out.println("- " + delta.getRevised().toString());
-//               }
-//            }
-//            previousText = currentText;
-//            previousPage = currentPage;
-//         }
-
-         // 4 - Retrieve all data in the remote store using pagination and per location/server splitting
+         // 2 - Retrieve all data keys in the remote store using pagination and per location/server splitting
          System.out.println("Loading keys [1/2]");
          Queue<String> keys = new ConcurrentLinkedQueue<>();
          Map<InetSocketAddress,List<Query>> queries = new HashMap<>();
@@ -152,6 +84,7 @@ public class SimpleApplication {
             }
          }
 
+         // 3 - Lead all urls, and print some statistics
          System.out.print("Loading keys [2/2]");
          for (InetSocketAddress location : queries.keySet()) {
             futures.add(
@@ -163,16 +96,64 @@ public class SimpleApplication {
             future.get();
 
          System.out.println("");
+         System.out.println("Statistics");
          System.out.println("#pages (w. content): " + keys.size());
-         int oneVersion = 0, fiveVersions = 0;
+         int oneVersion = 0, fiveVersions= 0;
+         Set<CharSequence> heavyVersionedPages = new HashSet<>();
          for(CharSequence key : urls.keySet()) {
             if (urls.get(key).get() > 1)
                oneVersion++;
-            if (urls.get(key).get() > 5)
+            if (urls.get(key).get() > 5) {
                fiveVersions++;
+               heavyVersionedPages.add(key);
+            }
          }
          System.out.println("#pages (>1 versions):" + oneVersion);
          System.out.println("#pages (>5 versions):" + fiveVersions);
+         System.out.println("Restricted domains content:");
+
+         // 4 - grab some URL with lots of versions, print differences between the versions
+         String heavyVersionedPage = heavyVersionedPages.iterator().next().toString();
+         query = store.newQuery();
+         query.setLimit(100);
+         query.setFields("score", "url", "fetchTime", "content", "inlinks");
+         query.setSortingOrder(false);
+         query.setSortingField("score");
+         SingleFieldValueFilter fieldValueFilter = new SingleFieldValueFilter();
+         fieldValueFilter.setFieldName("url");
+         fieldValueFilter.setFilterOp(FilterOp.LIKE);
+         fieldValueFilter.setOperands(new String[] { heavyVersionedPage });
+         query.setFilter(fieldValueFilter);
+         result = query.execute();
+
+         List<String> previousText = null;
+         WebPage previousPage = null;
+         while(result.next()){
+            WebPage currentPage = result.get();
+            System.out.println(currentPage.getUrl()+", "+currentPage.getFetchTime());
+            List<String> currentText = new ArrayList<>();
+            if (currentPage.getContent()==null) continue;
+            BufferedReader reader =
+                  new BufferedReader(
+                        new StringReader(
+                              new String(currentPage.getContent().array())));
+            String line;
+            while( (line=reader.readLine()) != null ){currentText.add(line);}
+            if (previousText!=null) {
+               System.out.println(
+                     "****** version"
+                           + previousPage.getFetchTime()
+                           + " -- "
+                           + currentPage.getFetchTime());
+               Patch patch = DiffUtils.diff(previousText, currentText);
+               for(Delta delta : patch.getDeltas()) {
+                  System.out.println("+ "+delta.getOriginal().toString());
+                  System.out.println("- " + delta.getRevised().toString());
+               }
+            }
+            previousText = currentText;
+            previousPage = currentPage;
+         }
 
       } catch(Exception e) {
          e.printStackTrace();

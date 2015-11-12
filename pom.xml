@@ -37,7 +37,7 @@
     <properties>
         <infinispan.version>7.0.1-SNAPSHOT</infinispan.version>
         <gora.version>0.5-SNAPSHOT</gora.version>
-        <avro.version>1.7.4</avro.version>
+        <avro.version>1.7.6</avro.version>
         <nutch.version>2.2</nutch.version>
     </properties>
 

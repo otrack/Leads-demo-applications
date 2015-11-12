@@ -30,7 +30,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>eu.leads.application.SimpleApplication</mainClass>
+                            <mainClass>eu.leads.application.CrawledDataStatistics</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -64,12 +64,11 @@
             <version>${nutch.version}</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.apache.nutch</groupId>-->
-            <!--<artifactId>nutch</artifactId>-->
-            <!--<version>${nutch.version}</version>-->
-            <!--<type>test-jar</type>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <version>1.11</version>
+        </dependency>
 
         <dependency>
             <groupId>com.googlecode.java-diff-utils</groupId>
