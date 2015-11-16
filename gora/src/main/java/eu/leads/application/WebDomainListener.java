@@ -49,10 +49,15 @@ public class WebDomainListener {
 
    }
 
-   public static String getDomainName(String url) throws URISyntaxException {
-      URI uri = new URI(url);
-      String domain = uri.getHost();
-      return domain.startsWith("www.") ? domain.substring(4) : domain;
+   public static String getDomainName(String url) {
+      try {
+         URI uri = new URI(url);
+         String domain = uri.getHost();
+         return domain.startsWith("www.") ? domain.substring(4) : domain;
+      }catch (Exception e){
+         // fail silently
+      }
+      return null;
    }
 
    public static Collection<String> retrieveFetchedUrls(){
@@ -113,10 +118,11 @@ public class WebDomainListener {
          }
 
          String domain = getDomainName(url);
-
-         countDoamin(domain);
-         updateTopK(domain);
-         printTopK();
+         if (domain!=null) {
+            countDoamin(domain);
+            updateTopK(domain);
+            printTopK();
+         }
       }
 
       private void printTopK() {
@@ -125,26 +131,27 @@ public class WebDomainListener {
 
       private void updateTopK(String domain) {
 
-         boolean updated = false;
+         assert !domains.containsKey(domain) || domains.get(domain) >= 0;
+         assert topk.size()<=5;
 
-         if (topk.size() <= 5) {
-            updated = true;
+         if (topk.size() < 5) {
             topk.put(domain, domains.get(domain));
-         } else if (domains.get(domain) > lastCount) {
-            updated = true;
+         } else if (domains.containsKey(domain) && domains.get(domain) > lastCount) {
+            assert topk.containsKey(lastDomain);
             topk.remove(lastDomain);
-            topk.put(domain, domains.get(domain));
+            int domainCount = (domains.containsKey(domain) ? domains.get(domain) : 0);
+            topk.put(domain, domainCount);
          }
 
-         if (updated) {
-            TreeSet<Integer> ordered = new TreeSet<>(domains.values());
-            for (String d : topk.keySet()) {
-               if (topk.get(d) == ordered.last()) {
-                  lastDomain = d;
-                  lastCount = topk.get(d);
-               }
+         // update lastCount and lastDomain
+         lastCount = Integer.MAX_VALUE;
+         for (String d : topk.keySet()) {
+            if (topk.get(d).intValue() <= lastCount) {
+               lastDomain = d;
+               lastCount = topk.get(d);
             }
          }
+         assert topk.containsKey(lastDomain) && lastCount!=null;
 
       }
 

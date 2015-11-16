@@ -99,21 +99,27 @@ public class CrawledDataStatistics {
          System.out.println("Statistics");
          System.out.println("#pages (w. content): " + keys.size());
          int oneVersion = 0, fiveVersions= 0;
-         Set<CharSequence> heavyVersionedPages = new HashSet<>();
+         Set<String> heavyVersionedPages = new HashSet<>();
          for(CharSequence key : urls.keySet()) {
             if (urls.get(key).get() > 1)
                oneVersion++;
             if (urls.get(key).get() > 5) {
                fiveVersions++;
-               heavyVersionedPages.add(key);
+               heavyVersionedPages.add(key.toString());
             }
          }
          System.out.println("#pages (>1 versions):" + oneVersion);
          System.out.println("#pages (>5 versions):" + fiveVersions);
-         System.out.println("Restricted domains content:");
 
          // 4 - grab some URL with lots of versions, print differences between the versions
          String heavyVersionedPage = heavyVersionedPages.iterator().next().toString();
+         for(String versionedPage : heavyVersionedPages) {
+            if(versionedPage.contains("edu")){
+               heavyVersionedPage = versionedPage.toString();
+               break;
+            }
+         }
+         System.out.println("Computing diff for "+heavyVersionedPage);
          query = store.newQuery();
          query.setLimit(100);
          query.setFields("score", "url", "fetchTime", "content", "inlinks");
